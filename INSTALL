@@ -50,6 +50,6 @@ use "-h" option to get started.
 
 Examples:
 
-  memcacheq -p21201 -d -r -u root -H ./env -N
+  memcachedb -p21201 -d -r -u root -H ./env -N
 
 Have fun :)

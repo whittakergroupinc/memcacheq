@@ -144,7 +144,7 @@ static void stats_reset(void) {
 
 static void settings_init(void) {
     settings.access=0700;
-    settings.port = 21301;
+    settings.port = 21201;
     settings.udpport = 0;
     settings.interf.s_addr = htonl(INADDR_ANY);
     settings.item_buf_size = 512; /* default is 512B */
@@ -828,12 +828,7 @@ static void process_stat(conn *c, token_t *tokens, const size_t ntokens) {
     if (strcmp(subcommand, "bdb") == 0) {
         char temp[512];
         char *pos = temp;
-        int ret;
         pos += sprintf(pos, "STAT cache_size %u\r\n", bdb_settings.cache_size);
-        /* get page size */
-        if((ret = dbp->get_pagesize(dbp, &bdb_settings.page_size)) == 0){
-            pos += sprintf(pos, "STAT page_size %u\r\n", bdb_settings.page_size);
-        }
         pos += sprintf(pos, "STAT txn_lg_bsize %u\r\n", bdb_settings.txn_lg_bsize);
         pos += sprintf(pos, "STAT txn_nosync %d\r\n", bdb_settings.txn_nosync);
         pos += sprintf(pos, "STAT dldetect_val %d\r\n", bdb_settings.dldetect_val);
@@ -2101,7 +2096,6 @@ static void usage(void) {
 #endif
     printf("--------------------BerkeleyDB Options-------------------------------\n");
     printf("-m <num>      in-memmory cache size of BerkeleyDB in megabytes, default is 64MB\n");
-    printf("-A <num>      underlying page size in bytes, default is 4096, (512B ~ 64KB, power-of-two)\n");
     printf("-f <file>     filename of database, default is /data1/memcachedb/default.db\n");
     printf("-H <dir>      env home of database, default is /data1/memcachedb\n");
     printf("-e <num>      how many pages in a single db file, default is 262144, 1G per file\n");
@@ -2305,7 +2299,7 @@ int main (int argc, char **argv) {
     setbuf(stderr, NULL);
 
     /* process arguments */
-    while ((c = getopt(argc, argv, "a:U:p:s:c:hikvl:dru:P:t:b:f:H:m:A:L:C:D:NMSR:O:")) != -1) {
+    while ((c = getopt(argc, argv, "a:U:p:s:c:hikvl:dru:P:t:b:f:H:m:L:C:D:NMSR:O:")) != -1) {
         switch (c) {
         case 'a':
             /* access for unix domain socket, as octal mask (like chmod)*/
@@ -2368,7 +2362,7 @@ int main (int argc, char **argv) {
                 fprintf(stderr, "item buf size must be larger than 512 bytes\n");
                 return 1;
             } 
-            if(settings.item_buf_size > 64 * 1024){
+            if(settings.item_buf_size > 3 * 1024){
                 fprintf(stderr, "item buffer size(-b) must be smaller than page size\n");
                 return 1;
             } 
@@ -2381,9 +2375,6 @@ int main (int argc, char **argv) {
             break;
         case 'm':
             bdb_settings.cache_size = atoi(optarg) * 1024 * 1024;
-            break;
-        case 'A':
-            bdb_settings.page_size = atoi(optarg);
             break;
         case 'e':
            bdb_settings.q_extentsize = atoi(optarg);

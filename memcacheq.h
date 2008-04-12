@@ -119,7 +119,6 @@ struct bdb_settings {
     u_int32_t rep_req_max;
     u_int32_t rep_req_min;
     u_int32_t q_extentsize;
-    u_int32_t page_size;
 };
 
 typedef struct _stritem {

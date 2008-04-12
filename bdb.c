@@ -31,7 +31,6 @@ void bdb_settings_init(void)
     bdb_settings.db_file = DBFILE;
     bdb_settings.env_home = DBHOME;
     bdb_settings.cache_size = 64 * 1024 * 1024; /* default is 64MB */ 
-    bdb_settings.page_size = 4096;  /* default is 4K */
     bdb_settings.txn_lg_bsize = 32 * 1024; /* default is 32KB */ 
     bdb_settings.txn_nosync = 0; /* default DB_TXN_NOSYNC is off */
     bdb_settings.dldetect_val = 100 * 1000; /* default is 100 millisecond */
@@ -47,7 +46,7 @@ void bdb_settings_init(void)
                               
     bdb_settings.is_replicated = 0;
     bdb_settings.rep_localhost = "127.0.0.1"; /* local host in replication */
-    bdb_settings.rep_localport = 31311;  /* local port in replication */
+    bdb_settings.rep_localport = 31211;  /* local port in replication */
     bdb_settings.rep_remotehost = NULL; /* local host in replication */
     bdb_settings.rep_remoteport = 0;  /* local port in replication */
     bdb_settings.rep_is_master = -1; /* 1 on YES, 0 on NO, -1 on UNKNOWN, for two sites replication */
@@ -171,13 +170,8 @@ void bdb_db_open(void){
             fprintf(stderr, "db_create: %s\n", db_strerror(ret));
             exit(EXIT_FAILURE);
         }
-        /* set page size */
-        if ((ret = dbp->set_pagesize(dbp, bdb_settings.page_size)) != 0) {
-            fprintf(stderr, "dbp->set_pagesize: %s\n", db_strerror(ret));
-            exit(EXIT_FAILURE);
-        }
-
         /* set record len */
+        fprintf(stderr, "ibuffer: %d", settings.item_buf_size);
         if ((ret = dbp->set_re_len(dbp, settings.item_buf_size)) != 0) {
             fprintf(stderr, "dbp->set_re_len: %s\n", db_strerror(ret));
             exit(EXIT_FAILURE);
@@ -188,6 +182,7 @@ void bdb_db_open(void){
             fprintf(stderr, "dbp->set_q_extentsize: %s\n", db_strerror(ret));
             exit(EXIT_FAILURE);
         }
+
 
         if ((ret = dbp->open(dbp, NULL, bdb_settings.db_file, NULL, DB_QUEUE, bdb_settings.db_flags, 0664)) != 0) {
             if ((ret == ENOENT) || (ret == DB_LOCK_DEADLOCK) || (ret = DB_REP_LOCKOUT)) {
